@@ -9,6 +9,7 @@ import { OtherStudies } from '@/components/OtherStudies';
 
 export default function ResultatsPage() {
   const [analyse, setAnalyse] = useState<AnalyseNumerologique | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -60,6 +61,37 @@ export default function ResultatsPage() {
     (analyseData.nombreIntimeDetail?.explicationCalcul ? 
       extractNumberFromText(analyseData.nombreIntimeDetail.explicationCalcul) : null);
 
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    
+    setIsLoggingOut(true);
+    try {
+      // Appeler l'API de déconnexion
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        // Nettoyer le localStorage
+        localStorage.removeItem('derniereAnalyse');
+        // Rediriger vers la page d'accueil
+        router.push('/');
+      } else {
+        console.error('Erreur lors de la déconnexion');
+        // Nettoyer quand même le localStorage et rediriger
+        localStorage.removeItem('derniereAnalyse');
+        router.push('/');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+      // Nettoyer quand même le localStorage et rediriger
+      localStorage.removeItem('derniereAnalyse');
+      router.push('/');
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Fond cosmique avec étoiles */}
@@ -70,6 +102,17 @@ export default function ResultatsPage() {
       {/* Contenu principal */}
       <div className="relative z-10 min-h-screen px-4 py-12">
         <div className="container mx-auto max-w-4xl">
+          {/* Bouton de déconnexion - En haut à droite */}
+          <div className="flex justify-end mb-4">
+            <button
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors bg-black/40 backdrop-blur-md rounded-lg border border-white/10 hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoggingOut ? 'Déconnexion...' : 'Se déconnecter'}
+            </button>
+          </div>
+
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-4xl md:text-5xl font-serif font-bold text-white mb-4">

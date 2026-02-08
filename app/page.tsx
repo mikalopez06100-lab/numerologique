@@ -12,6 +12,7 @@ export default function Home() {
   const [step, setStep] = useState<'email' | 'form'>('email');
   const [email, setEmail] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingAnalyse, setIsLoadingAnalyse] = useState(false);
   const router = useRouter();
 
   // Vérifier si l'utilisateur est déjà authentifié
@@ -72,6 +73,28 @@ export default function Home() {
       alert(`Une erreur est survenue: ${errorMessage}\n\nVeuillez vérifier votre connexion et réessayer.`);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleAccessAnalyse = async () => {
+    setIsLoadingAnalyse(true);
+    try {
+      const response = await fetch('/api/analyse/mon-analyse');
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        // Stocker l'analyse dans le localStorage
+        localStorage.setItem('derniereAnalyse', JSON.stringify(result.data));
+        // Rediriger vers la page de résultats
+        router.push('/resultats');
+      } else {
+        alert(result.error || 'Aucune analyse trouvée. Veuillez créer une nouvelle analyse.');
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      alert('Une erreur est survenue lors de la récupération de l\'analyse.');
+    } finally {
+      setIsLoadingAnalyse(false);
     }
   };
 
@@ -144,8 +167,17 @@ export default function Home() {
               />
             ) : (
               <>
-                <div className="mb-4 text-sm text-gray-400">
-                  Email enregistré : <span className="text-purple-400">{email}</span>
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="text-sm text-gray-400">
+                    Email enregistré : <span className="text-purple-400">{email}</span>
+                  </div>
+                  <button
+                    onClick={handleAccessAnalyse}
+                    disabled={isLoadingAnalyse}
+                    className="px-4 py-2 text-sm text-purple-400 hover:text-purple-300 transition-colors bg-black/40 backdrop-blur-md rounded-lg border border-purple-500/30 hover:border-purple-400/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoadingAnalyse ? 'Chargement...' : 'Voir mon analyse'}
+                  </button>
                 </div>
                 <FormulaireNumerologie
                   onSubmit={handleFormSubmit}

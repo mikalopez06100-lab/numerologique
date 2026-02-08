@@ -13,7 +13,8 @@ export default function Home() {
   const [email, setEmail] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingAnalyse, setIsLoadingAnalyse] = useState(false);
-  const [hasAnalyse, setHasAnalyse] = useState<boolean | null>(null);
+  const [hasAnalyse, setHasAnalyse] = useState<boolean>(false);
+  const [isCheckingAnalyse, setIsCheckingAnalyse] = useState(false);
   const router = useRouter();
 
   // Vérifier si l'utilisateur est déjà authentifié et s'il a une analyse
@@ -26,17 +27,32 @@ export default function Home() {
           setEmail(data.email);
           setStep('form');
           
-          // Vérifier si l'utilisateur a déjà une analyse
+          // Vérifier si l'utilisateur a déjà une analyse avec timeout
+          setIsCheckingAnalyse(true);
           try {
-            const analyseResponse = await fetch('/api/analyse/has-analyse');
-            const analyseData = await analyseResponse.json();
-            if (analyseData.success) {
-              setHasAnalyse(analyseData.hasAnalyse);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 secondes max
+            
+            const analyseResponse = await fetch('/api/analyse/has-analyse', {
+              signal: controller.signal,
+            });
+            clearTimeout(timeoutId);
+            
+            if (analyseResponse.ok) {
+              const analyseData = await analyseResponse.json();
+              setHasAnalyse(analyseData.hasAnalyse === true);
+            } else {
+              setHasAnalyse(false);
             }
           } catch (error) {
             console.error('Erreur lors de la vérification de l\'analyse:', error);
+            // En cas d'erreur, on assume qu'il n'a pas d'analyse pour permettre la création
             setHasAnalyse(false);
+          } finally {
+            setIsCheckingAnalyse(false);
           }
+        } else {
+          setHasAnalyse(false);
         }
       } catch (error) {
         // Pas authentifié, rester sur l'étape email
@@ -76,16 +92,29 @@ export default function Home() {
         setEmail(userEmail);
         setStep('form');
         
-        // Vérifier si l'utilisateur a déjà une analyse
+        // Vérifier si l'utilisateur a déjà une analyse avec timeout
+        setIsCheckingAnalyse(true);
         try {
-          const analyseResponse = await fetch('/api/analyse/has-analyse');
-          const analyseData = await analyseResponse.json();
-          if (analyseData.success) {
-            setHasAnalyse(analyseData.hasAnalyse);
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 secondes max
+          
+          const analyseResponse = await fetch('/api/analyse/has-analyse', {
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+          
+          if (analyseResponse.ok) {
+            const analyseData = await analyseResponse.json();
+            setHasAnalyse(analyseData.hasAnalyse === true);
+          } else {
+            setHasAnalyse(false);
           }
         } catch (error) {
           console.error('Erreur lors de la vérification de l\'analyse:', error);
+          // En cas d'erreur, on assume qu'il n'a pas d'analyse pour permettre la création
           setHasAnalyse(false);
+        } finally {
+          setIsCheckingAnalyse(false);
         }
       } else {
         const errorMessage = result.error || 'Erreur lors de l\'enregistrement de l\'email';
@@ -213,7 +242,11 @@ export default function Home() {
                     </button>
                   )}
                 </div>
-                {hasAnalyse ? (
+                {isCheckingAnalyse ? (
+                  <div className="text-center py-8">
+                    <div className="text-gray-400">Vérification...</div>
+                  </div>
+                ) : hasAnalyse ? (
                   <div className="text-center py-8">
                     <p className="text-gray-300 mb-4">
                       Vous avez déjà réalisé une analyse numérologique.
@@ -225,15 +258,11 @@ export default function Home() {
                       Chaque email ne peut effectuer qu'une seule analyse.
                     </p>
                   </div>
-                ) : hasAnalyse === false ? (
+                ) : (
                   <FormulaireNumerologie
                     onSubmit={handleFormSubmit}
                     isLoading={isLoading}
                   />
-                ) : (
-                  <div className="text-center py-8">
-                    <div className="text-gray-400">Vérification...</div>
-                  </div>
                 )}
               </>
             )}

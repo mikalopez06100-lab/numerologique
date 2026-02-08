@@ -15,27 +15,52 @@ function initializeFirebase() {
       console.warn('⚠️ FIREBASE_PROJECT_ID n\'est pas défini. Firebase ne sera pas initialisé pendant le build.');
       return;
     }
-    throw new Error('FIREBASE_PROJECT_ID n\'est pas défini dans les variables d\'environnement');
+    const error = new Error('FIREBASE_PROJECT_ID n\'est pas défini dans les variables d\'environnement');
+    console.error('❌', error.message);
+    throw error;
   }
 
   // Si FIREBASE_PRIVATE_KEY est défini, utiliser les credentials JSON
   if (process.env.FIREBASE_PRIVATE_KEY) {
     if (!process.env.FIREBASE_CLIENT_EMAIL) {
-      throw new Error('FIREBASE_CLIENT_EMAIL est requis quand FIREBASE_PRIVATE_KEY est défini');
+      const error = new Error('FIREBASE_CLIENT_EMAIL est requis quand FIREBASE_PRIVATE_KEY est défini');
+      console.error('❌', error.message);
+      throw error;
     }
-    initializeApp({
-      credential: cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-      }),
-    });
+    
+    try {
+      // Nettoyer la clé privée (supprimer les guillemets si présents)
+      let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+      if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+        privateKey = privateKey.slice(1, -1);
+      }
+      privateKey = privateKey.replace(/\\n/g, '\n');
+      
+      console.log('🔧 Initialisation Firebase avec credentials...');
+      initializeApp({
+        credential: cert({
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: privateKey,
+        }),
+      });
+      console.log('✅ Firebase initialisé avec succès');
+    } catch (initError) {
+      console.error('❌ Erreur lors de l\'initialisation Firebase:', initError);
+      throw new Error(`Erreur initialisation Firebase: ${initError instanceof Error ? initError.message : 'Erreur inconnue'}`);
+    }
   } else if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
     // Alternative : utiliser un fichier JSON de service account
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-    initializeApp({
-      credential: cert(serviceAccount),
-    });
+    try {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+      initializeApp({
+        credential: cert(serviceAccount),
+      });
+      console.log('✅ Firebase initialisé avec service account JSON');
+    } catch (parseError) {
+      console.error('❌ Erreur lors du parsing du service account:', parseError);
+      throw new Error(`Erreur parsing service account: ${parseError instanceof Error ? parseError.message : 'Erreur inconnue'}`);
+    }
   } else {
     // En développement local, Firebase peut utiliser les credentials par défaut
     // ou vous pouvez utiliser l'émulateur Firebase
@@ -43,8 +68,10 @@ function initializeFirebase() {
       initializeApp({
         projectId: process.env.FIREBASE_PROJECT_ID,
       });
+      console.log('✅ Firebase initialisé avec project ID uniquement');
     } catch (error) {
       console.warn('⚠️ Firebase Admin non configuré. Utilisez les variables d\'environnement ou l\'émulateur.');
+      throw error;
     }
   }
 }
@@ -61,15 +88,30 @@ export function getDb() {
     return null;
   }
   
-  if (getApps().length === 0) {
-    initializeFirebase();
+  try {
+    if (getApps().length === 0) {
+      console.log('🔧 Initialisation Firebase...');
+      initializeFirebase();
+    }
+    
+    if (getApps().length === 0) {
+      const error = new Error('Firebase n\'est pas initialisé. Vérifiez les variables d\'environnement.');
+      console.error('❌', error.message);
+      console.error('Variables présentes:', {
+        FIREBASE_PROJECT_ID: !!process.env.FIREBASE_PROJECT_ID,
+        FIREBASE_CLIENT_EMAIL: !!process.env.FIREBASE_CLIENT_EMAIL,
+        FIREBASE_PRIVATE_KEY: !!process.env.FIREBASE_PRIVATE_KEY,
+      });
+      throw error;
+    }
+    
+    const db = getFirestore();
+    console.log('✅ Firestore instance obtenue');
+    return db;
+  } catch (error) {
+    console.error('❌ Erreur getDb:', error);
+    throw error;
   }
-  
-  if (getApps().length === 0) {
-    throw new Error('Firebase n\'est pas initialisé. Vérifiez les variables d\'environnement.');
-  }
-  
-  return getFirestore();
 }
 
 // Export pour compatibilité (lazy)

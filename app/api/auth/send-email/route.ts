@@ -20,12 +20,28 @@ export async function POST(request: NextRequest) {
 
     try {
       // Vérifier la configuration Firebase
+      console.log('🔍 Vérification configuration Firebase...');
+      console.log('FIREBASE_PROJECT_ID:', process.env.FIREBASE_PROJECT_ID ? '✅ Présent' : '❌ Manquant');
+      console.log('FIREBASE_CLIENT_EMAIL:', process.env.FIREBASE_CLIENT_EMAIL ? '✅ Présent' : '❌ Manquant');
+      console.log('FIREBASE_PRIVATE_KEY:', process.env.FIREBASE_PRIVATE_KEY ? '✅ Présent' : '❌ Manquant');
+      
       if (!process.env.FIREBASE_PROJECT_ID) {
         console.error('❌ FIREBASE_PROJECT_ID non configuré');
         return NextResponse.json(
           {
             success: false,
-            error: 'Configuration Firebase manquante. Veuillez contacter le support.',
+            error: 'Configuration Firebase manquante (FIREBASE_PROJECT_ID). Veuillez vérifier les variables d\'environnement dans Vercel.',
+          },
+          { status: 500 }
+        );
+      }
+
+      if (!process.env.FIREBASE_CLIENT_EMAIL || !process.env.FIREBASE_PRIVATE_KEY) {
+        console.error('❌ Credentials Firebase incomplets');
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Configuration Firebase incomplète. Vérifiez FIREBASE_CLIENT_EMAIL et FIREBASE_PRIVATE_KEY dans Vercel.',
           },
           { status: 500 }
         );
@@ -34,9 +50,13 @@ export async function POST(request: NextRequest) {
       // Vérifier si l'utilisateur a déjà fait une analyse
       let alreadyAnalyzed = false;
       try {
+        console.log('🔍 Vérification si utilisateur a déjà analysé...');
         alreadyAnalyzed = await hasUserAlreadyAnalyzed(email);
+        console.log('✅ Vérification terminée, alreadyAnalyzed:', alreadyAnalyzed);
       } catch (error) {
         console.error('❌ Erreur lors de la vérification hasUserAlreadyAnalyzed:', error);
+        console.error('Détails:', error instanceof Error ? error.message : String(error));
+        console.error('Stack:', error instanceof Error ? error.stack : 'N/A');
         // Si c'est une erreur Firebase, on continue quand même pour créer l'utilisateur
         // mais on log l'erreur
       }
@@ -54,24 +74,38 @@ export async function POST(request: NextRequest) {
       // Créer ou récupérer l'utilisateur
       let user;
       try {
+        console.log('🔍 Création/récupération utilisateur pour:', email);
         user = await getOrCreateUser(email);
         console.log('✅ Utilisateur créé/récupéré:', user.id);
       } catch (error) {
         console.error('❌ Erreur lors de la création/récupération de l\'utilisateur:', error);
         const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+        const errorStack = error instanceof Error ? error.stack : String(error);
+        
+        console.error('Message d\'erreur:', errorMessage);
+        console.error('Stack trace:', errorStack);
         
         // Vérifier si c'est une erreur Firebase
-        if (errorMessage.includes('Firebase') || errorMessage.includes('Firestore')) {
+        if (errorMessage.includes('Firebase') || errorMessage.includes('Firestore') || errorMessage.includes('FIREBASE')) {
           return NextResponse.json(
             {
               success: false,
-              error: 'Erreur de connexion à la base de données. Veuillez réessayer dans quelques instants.',
+              error: `Erreur de connexion à la base de données Firebase: ${errorMessage}. Vérifiez la configuration dans Vercel.`,
+              details: process.env.NODE_ENV === 'development' ? errorStack : undefined,
             },
             { status: 500 }
           );
         }
         
-        throw error; // Relancer l'erreur si ce n'est pas Firebase
+        // Autres erreurs
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Erreur lors de l'enregistrement: ${errorMessage}`,
+            details: process.env.NODE_ENV === 'development' ? errorStack : undefined,
+          },
+          { status: 500 }
+        );
       }
 
       // Créer un token d'authentification

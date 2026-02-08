@@ -10,11 +10,11 @@ export function DOMProtection() {
     // Protection globale contre les erreurs removeChild
     const originalRemoveChild = Node.prototype.removeChild;
     
-    Node.prototype.removeChild = function(child: Node): Node {
+    Node.prototype.removeChild = function<T extends Node>(child: T): T {
       try {
         // Vérifier que l'élément est bien un enfant de ce nœud
         if (this.contains && this.contains(child)) {
-          return originalRemoveChild.call(this, child);
+          return originalRemoveChild.call(this, child) as T;
         } else {
           // Si l'élément n'est pas un enfant, retourner l'élément sans erreur
           return child;

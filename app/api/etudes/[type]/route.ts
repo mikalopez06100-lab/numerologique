@@ -158,7 +158,7 @@ export async function POST(
             ? dateNaissancePartenaire 
             : convertirDateHTMLVersFormat(dateNaissancePartenaire);
           
-          if (!validerDate(datePartenaire)) {
+          if (datePartenaire && !validerDate(datePartenaire)) {
             return NextResponse.json(
               { success: false, error: 'Format de date du partenaire invalide. Utilisez JJ/MM/AAAA' },
               { status: 400 }

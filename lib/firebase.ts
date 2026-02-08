@@ -2,10 +2,19 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
-// Initialiser Firebase Admin si ce n'est pas déjà fait
-if (getApps().length === 0) {
+// Fonction pour initialiser Firebase (lazy initialization)
+function initializeFirebase() {
+  if (getApps().length > 0) {
+    return; // Déjà initialisé
+  }
+
   // Vérifier si les variables d'environnement sont définies
   if (!process.env.FIREBASE_PROJECT_ID) {
+    // En mode build, on ne lance pas d'erreur
+    if (process.env.NEXT_PHASE === 'phase-production-build') {
+      console.warn('⚠️ FIREBASE_PROJECT_ID n\'est pas défini. Firebase ne sera pas initialisé pendant le build.');
+      return;
+    }
     throw new Error('FIREBASE_PROJECT_ID n\'est pas défini dans les variables d\'environnement');
   }
 
@@ -40,5 +49,77 @@ if (getApps().length === 0) {
   }
 }
 
+// Initialiser Firebase si les variables sont définies
+if (process.env.FIREBASE_PROJECT_ID) {
+  initializeFirebase();
+}
+
 // Obtenir l'instance Firestore
-export const db = getFirestore();
+export function getDb() {
+  // Pendant le build, retourner null (les routes API ne seront pas exécutées)
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    return null;
+  }
+  
+  if (getApps().length === 0) {
+    initializeFirebase();
+  }
+  
+  if (getApps().length === 0) {
+    throw new Error('Firebase n\'est pas initialisé. Vérifiez les variables d\'environnement.');
+  }
+  
+  return getFirestore();
+}
+
+// Export pour compatibilité (lazy)
+let _db: ReturnType<typeof getFirestore> | null = null;
+
+export const db = new Proxy({} as ReturnType<typeof getFirestore>, {
+  get(target, prop) {
+    if (!_db) {
+      const dbInstance = getDb();
+      if (!dbInstance) {
+        // Pendant le build, retourner des fonctions no-op
+        if (prop === 'collection') {
+          return () => ({
+            add: () => Promise.resolve({ id: 'build-id' }),
+            doc: () => ({
+              get: () => Promise.resolve({ exists: false }),
+              update: () => Promise.resolve(),
+            }),
+            where: () => ({
+              limit: () => ({
+                get: () => Promise.resolve({ empty: true, docs: [] }),
+              }),
+              orderBy: () => ({
+                get: () => Promise.resolve({ empty: true, docs: [] }),
+              }),
+            }),
+            orderBy: () => ({
+              offset: () => ({
+                limit: () => ({
+                  get: () => Promise.resolve({ empty: true, docs: [] }),
+                }),
+              }),
+              limit: () => ({
+                get: () => Promise.resolve({ empty: true, docs: [] }),
+              }),
+            }),
+            count: () => ({
+              get: () => Promise.resolve({ data: () => ({ count: 0 }) }),
+            }),
+            get: () => Promise.resolve({ empty: true, docs: [] }),
+          });
+        }
+        return () => {};
+      }
+      _db = dbInstance;
+    }
+    const value = _db[prop as keyof ReturnType<typeof getFirestore>];
+    if (typeof value === 'function') {
+      return value.bind(_db);
+    }
+    return value;
+  }
+});

@@ -2,6 +2,7 @@
 
 /**
  * Réduit un nombre à un chiffre unique (1-9) ou un maître nombre (11, 22, 33)
+ * Utilisé pour les calculs intermédiaires où les nombres maîtres peuvent être conservés
  */
 export function reduireNombre(nombre: number): number {
   if (nombre === 11 || nombre === 22 || nombre === 33) {
@@ -23,6 +24,20 @@ export function reduireNombre(nombre: number): number {
 }
 
 /**
+ * Réduit un nombre à un chiffre unique (1-9) en réduisant aussi les nombres maîtres
+ * Utilisé pour l'affichage final des résultats
+ */
+export function reduireNombreFinal(nombre: number): number {
+  while (nombre > 9) {
+    nombre = nombre
+      .toString()
+      .split('')
+      .reduce((sum, digit) => sum + parseInt(digit, 10), 0);
+  }
+  return nombre;
+}
+
+/**
  * Convertit une lettre en valeur numérologique (A=1, B=2, etc.)
  */
 export function lettreVersNombre(lettre: string): number {
@@ -33,6 +48,7 @@ export function lettreVersNombre(lettre: string): number {
 
 /**
  * Calcule la valeur numérologique d'un nom complet
+ * Réduit toujours à un chiffre unique (1-9)
  */
 export function calculerValeurNom(nomComplet: string): number {
   const lettres = nomComplet.replace(/[^A-Za-z]/g, '').split('');
@@ -40,7 +56,7 @@ export function calculerValeurNom(nomComplet: string): number {
     return sum + lettreVersNombre(lettre);
   }, 0);
   
-  return reduireNombre(somme);
+  return reduireNombreFinal(somme);
 }
 
 /**
@@ -57,7 +73,7 @@ export function calculerDetailsNom(nomComplet: string): {
     valeur: lettreVersNombre(lettre),
   }));
   const somme = detailsLettres.reduce((sum, item) => sum + item.valeur, 0);
-  const nombreFinal = reduireNombre(somme);
+  const nombreFinal = reduireNombreFinal(somme);
   
   return {
     lettres: detailsLettres,
@@ -112,17 +128,26 @@ export function convertirFormatVersDateHTML(dateFormat: string): string {
 
 /**
  * Calcule le chemin de vie à partir d'une date de naissance
+ * Le chemin de vie est toujours réduit à un chiffre unique (1-9)
+ * Même si un nombre maître (11, 22, 33) apparaît, il est réduit
  */
 export function calculerCheminDeVie(dateNaissance: string): number {
   const [, jour, mois, annee] = dateNaissance.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)!;
   
-  const sommeJour = reduireNombre(parseInt(jour));
-  const sommeMois = reduireNombre(parseInt(mois));
-  const sommeAnnee = reduireNombre(
+  // Réduire le jour (ex: 10 → 1+0 = 1)
+  const sommeJour = reduireNombreFinal(parseInt(jour));
+  
+  // Réduire le mois (ex: 10 → 1+0 = 1)
+  const sommeMois = reduireNombreFinal(parseInt(mois));
+  
+  // Réduire l'année (ex: 1980 → 1+9+8+0 = 18 → 1+8 = 9)
+  const sommeAnnee = reduireNombreFinal(
     annee.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0)
   );
   
-  const cheminDeVie = reduireNombre(sommeJour + sommeMois + sommeAnnee);
+  // Additionner et réduire à un chiffre unique
+  // Ex: 1 + 1 + 9 = 11 → 1+1 = 2
+  const cheminDeVie = reduireNombreFinal(sommeJour + sommeMois + sommeAnnee);
   return cheminDeVie;
 }
 
@@ -144,10 +169,10 @@ export function calculerDetailsCheminDeVie(dateNaissance: string): {
   const anneeNum = parseInt(annee);
   
   const sommeAnnee = annee.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0);
-  const sommeJour = reduireNombre(jourNum);
-  const sommeMois = reduireNombre(moisNum);
-  const sommeAnneeReduite = reduireNombre(sommeAnnee);
-  const cheminDeVie = reduireNombre(sommeJour + sommeMois + sommeAnneeReduite);
+  const sommeJour = reduireNombreFinal(jourNum);
+  const sommeMois = reduireNombreFinal(moisNum);
+  const sommeAnneeReduite = reduireNombreFinal(sommeAnnee);
+  const cheminDeVie = reduireNombreFinal(sommeJour + sommeMois + sommeAnneeReduite);
   
   return {
     jour: jourNum,
@@ -183,10 +208,10 @@ export function calculerAnneePersonnelle(
     .toString()
     .split('')
     .reduce((sum, digit) => sum + parseInt(digit, 10), 0);
-  const anneeUniverselle = reduireNombre(sommeAnnee);
+  const anneeUniverselle = reduireNombreFinal(sommeAnnee);
   
   // Année personnelle = Chemin de vie + Année universelle
-  const anneePersonnelle = reduireNombre(cheminDeVie + anneeUniverselle);
+  const anneePersonnelle = reduireNombreFinal(cheminDeVie + anneeUniverselle);
   
   return {
     cheminDeVie,

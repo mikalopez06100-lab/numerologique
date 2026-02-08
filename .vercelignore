@@ -1,0 +1,11 @@
+# Fichiers à ignorer lors du déploiement Vercel
+node_modules
+.next
+.env.local
+.env.development
+.env.test
+dev.db
+*.log
+.DS_Store
+prisma/migrations
+scripts

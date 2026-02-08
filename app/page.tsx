@@ -1,65 +1,150 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+import { FormulaireNumerologie } from '@/components/FormulaireNumerologie';
+import { EmailInput } from '@/components/EmailInput';
+import { SocialProof } from '@/components/SocialProof';
+import { StarsBackground } from '@/components/StarsBackground';
+import { FormulaireNumerologie as FormulaireType } from '@/types/numerologie';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
+  const [step, setStep] = useState<'email' | 'form'>('email');
+  const [email, setEmail] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+
+  // Vérifier si l'utilisateur est déjà authentifié
+  useEffect(() => {
+    // Vérifier le cookie d'authentification
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/check');
+        const data = await response.json();
+        if (data.authenticated && data.email) {
+          setEmail(data.email);
+          setStep('form');
+        }
+      } catch (error) {
+        // Pas authentifié, rester sur l'étape email
+      }
+    };
+    checkAuth();
+  }, []);
+
+  const handleEmailSubmit = async (userEmail: string) => {
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch('/api/auth/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: userEmail }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Enregistrer l'email et passer directement au formulaire
+        setEmail(userEmail);
+        setStep('form');
+      } else {
+        alert(result.error || 'Erreur lors de l\'enregistrement de l\'email');
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      alert('Une erreur est survenue. Veuillez réessayer.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFormSubmit = async (data: FormulaireType) => {
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch('/api/analyse', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ...data, email }),
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        // Stocker l'analyse dans le localStorage pour la page de résultats
+        localStorage.setItem('derniereAnalyse', JSON.stringify(result.data));
+        // Rediriger vers la page de résultats
+        router.push('/resultats');
+      } else {
+        console.error('Erreur API:', result);
+        let errorMessage = result.error || 'Une erreur est survenue lors de l\'analyse';
+        
+        if (response.status === 429 && result.rateLimit) {
+          errorMessage += `\n\nLimites d'utilisation:\n`;
+          errorMessage += `- Quotidien: ${result.rateLimit.daily.used}/${result.rateLimit.daily.max}\n`;
+          errorMessage += `- Horaire: ${result.rateLimit.hourly.used}/${result.rateLimit.hourly.max}\n`;
+          errorMessage += `- Par minute: ${result.rateLimit.perMinute.used}/${result.rateLimit.perMinute.max}`;
+        }
+        
+        alert(errorMessage);
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      alert('Une erreur est survenue. Veuillez réessayer.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Fond cosmique avec étoiles */}
+      <div className="absolute inset-0 bg-gradient-to-b from-gray-900 via-purple-900 to-gray-900">
+        <StarsBackground />
+      </div>
+
+      {/* Contenu principal */}
+      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-12">
+        <div className="w-full max-w-2xl">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-5xl font-serif font-bold text-white mb-4">
+              Votre Profil Numérologique en 30 secondes
+            </h1>
+            <p className="text-lg text-gray-300">
+              Une analyse immédiate, précise et personnalisée.
+            </p>
+          </div>
+
+          {/* Formulaire dans un conteneur avec effet glassmorphism */}
+          <div className="bg-black/40 backdrop-blur-md rounded-2xl p-8 md:p-10 border border-white/10 shadow-2xl shadow-purple-500/20">
+            {step === 'email' ? (
+              <EmailInput
+                onSubmit={handleEmailSubmit}
+                isLoading={isLoading}
+              />
+            ) : (
+              <>
+                <div className="mb-4 text-sm text-gray-400">
+                  Email enregistré : <span className="text-purple-400">{email}</span>
+                </div>
+                <FormulaireNumerologie
+                  onSubmit={handleFormSubmit}
+                  isLoading={isLoading}
+                />
+              </>
+            )}
+          </div>
+
+          {/* Social Proof */}
+          <SocialProof />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </div>
     </div>
   );
 }

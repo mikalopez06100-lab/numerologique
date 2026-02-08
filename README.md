@@ -1,36 +1,106 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Application Numérologique
 
-## Getting Started
+Application Next.js pour l'analyse numérologique personnalisée avec intégration OpenAI.
 
-First, run the development server:
+## Architecture
+
+### Structure des dossiers
+
+```
+numerologie-app/
+├── app/
+│   ├── api/
+│   │   └── analyse/
+│   │       └── route.ts          # Route API pour l'analyse
+│   ├── resultats/
+│   │   └── page.tsx              # Page de résultats
+│   ├── layout.tsx                # Layout principal
+│   ├── page.tsx                  # Page d'accueil
+│   └── globals.css               # Styles globaux
+├── components/
+│   ├── ui/
+│   │   ├── Input.tsx             # Composant input réutilisable
+│   │   └── Button.tsx            # Composant bouton réutilisable
+│   ├── FormulaireNumerologie.tsx # Formulaire principal
+│   └── SocialProof.tsx           # Preuve sociale
+├── lib/
+│   ├── numerologie.ts            # Utilitaires numérologiques
+│   └── openai.ts                 # Configuration OpenAI
+├── types/
+│   └── numerologie.ts            # Types TypeScript
+└── .env.example                  # Exemple de configuration
+```
+
+## Fonctionnalités
+
+### Page d'accueil (`/`)
+- Formulaire de saisie avec validation
+- Design cosmique avec fond étoilé
+- Interface glassmorphism
+- Preuve sociale (10 000+ analyses)
+
+### Formulaire
+- **Prénom** : Champ texte requis
+- **Nom** : Champ texte requis
+- **Lieu de naissance** : Champ texte requis
+- **Date de naissance** : Format JJ/MM/AAAA avec validation
+
+### Calculs numérologiques
+- **Chemin de vie** : Calculé à partir de la date de naissance
+- **Nombre d'expression** : Calculé à partir du nom complet
+- **Nombre de personnalité** : Calculé à partir du prénom
+
+### API OpenAI
+- Génération d'analyse personnalisée
+- Parsing automatique de la réponse
+- Fallback vers analyse basique si OpenAI n'est pas configuré
+
+## Configuration
+
+### Variables d'environnement
+
+Créez un fichier `.env.local` à la racine du projet :
+
+```env
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=gpt-4
+OPENAI_TEMPERATURE=0.7
+OPENAI_MAX_TOKENS=2000
+```
+
+### Installation
+
+```bash
+npm install
+```
+
+### Développement
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+L'application sera accessible sur [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## Technologies utilisées
 
-To learn more about Next.js, take a look at the following resources:
+- **Next.js 16** : Framework React
+- **TypeScript** : Typage statique
+- **Tailwind CSS** : Styling
+- **OpenAI API** : Génération d'analyses (optionnel)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Prochaines étapes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Configurer la clé API OpenAI dans `.env.local`
+2. Améliorer le parsing de la réponse OpenAI
+3. Ajouter la persistance des analyses (base de données)
+4. Ajouter l'authentification utilisateur
+5. Améliorer le design responsive
+6. Ajouter des animations supplémentaires

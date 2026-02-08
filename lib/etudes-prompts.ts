@@ -496,7 +496,7 @@ Contraintes générales :
 Structure attendue (réponds en JSON strict) :
 
 {
-  "introduction": "Paragraphe présentant l'analyse de compatibilité familiale${donnees.relation ? ` dans le contexte d'une relation ${donnees.relation}` : ''}"`,
+  "introduction": "Paragraphe présentant l'analyse de compatibilité familiale${donnees.relation ? ' dans le contexte d\\'une relation ' + donnees.relation : ''}",
   "analyseGlobale": {
     "score": ${donnees.compatibilite.scoreGlobal},
     "evaluation": "Évaluation générale de la compatibilité familiale",

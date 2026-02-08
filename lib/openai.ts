@@ -137,73 +137,8 @@ Important :
 
 /**
  * Appelle l'API OpenAI pour générer l'analyse
+ * La fonction genererAnalyseOpenAI est définie plus bas avec surcharge
  */
-// La fonction genererAnalyseOpenAI est définie plus bas avec surcharge
-
-    const requestBody = {
-      model: config.model || 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: 'Tu es un expert en numérologie. Fournis des analyses détaillées, personnalisées et positives en français. Réponds toujours en format JSON valide.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: config.temperature || 0.7,
-      max_tokens: config.maxTokens || 4000,
-      response_format: { type: 'json_object' },
-    };
-
-    console.log('🌐 Envoi de la requête à OpenAI...');
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.apiKey}`,
-      },
-      body: JSON.stringify(requestBody),
-    });
-
-    console.log('📡 Réponse reçue, status:', response.status);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ Erreur réponse OpenAI:', errorText);
-      
-      let errorData;
-      try {
-        errorData = JSON.parse(errorText);
-      } catch {
-        errorData = { error: { message: errorText } };
-      }
-      
-      throw new Error(
-        `Erreur API OpenAI (${response.status}): ${errorData.error?.message || response.statusText}`
-      );
-    }
-
-    const data = await response.json();
-    console.log('✅ Données OpenAI parsées');
-    
-    const content = data.choices[0]?.message?.content;
-    
-    if (!content) {
-      console.error('❌ Pas de contenu dans la réponse:', JSON.stringify(data, null, 2));
-      throw new Error('Réponse OpenAI vide');
-    }
-
-    return content;
-  } catch (error) {
-    console.error('❌ Exception lors de l\'appel OpenAI:', error);
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error('Erreur inconnue lors de l\'appel à OpenAI');
-  }
-}
 
 /**
  * Génère une analyse OpenAI (surcharge pour accepter un prompt personnalisé)

@@ -54,85 +54,85 @@ export function genererPrompt(donnees: OpenAIRequest): string {
   const sommeAnneeReduite = reduireNombre(donnees.detailsCheminDeVie.sommeAnnee);
   const sommeIntermediaire = donnees.detailsCheminDeVie.sommeJour + sommeAnneeReduite + donnees.detailsCheminDeVie.sommeMois;
 
-  return `Tu es un expert en numérologie moderne, avec une approche analytique, structurée et pédagogique.
+  return `Tu es un expert en numérologie moderne. Tu vas créer une analyse numérologique PERSONNALISÉE et PERCUTANTE pour ${donnees.prenom}.
 
-À partir des informations suivantes :
-- Nom : ${donnees.nom}
-- Prénom : ${donnees.prenom}
-- Date de naissance : ${donnees.dateNaissance} (format JJ/MM/AAAA)
+**INSTRUCTIONS IMPORTANTES :**
+- Parle DIRECTEMENT à ${donnees.prenom} en utilisant "tu" et "ton/ta/tes"
+- Utilise son prénom ${donnees.prenom} régulièrement dans l'analyse pour la personnaliser
+- Sois DIRECT, CONCIS et IMPACTANT - évite les phrases longues et vagues
+- Détaille sa PERSONNALITÉ de manière précise et concrète
+- Utilise un ton chaleureux mais professionnel
+- Évite le jargon ésotérique - reste accessible et pratique
 
-Ta mission est de générer une étude numérologique complète, claire et pertinente, destinée à un public adulte, curieux de développement personnel et de compréhension de soi.
+**DONNÉES NUMÉROLOGIQUES :**
 
-Contraintes générales :
-- Le ton doit être professionnel, sérieux et accessible
-- Le texte doit expliquer les calculs étape par étape, de manière compréhensible
-- Aucune référence mystique ou ésotérique excessive
-- Approche pragmatique, orientée personnalité, potentiel, cycles de vie et axes de progression
-- Langage fluide, structuré, crédible et utile
+Prénom : ${donnees.prenom}
+Nom : ${donnees.nom}
+Date de naissance : ${donnees.dateNaissance}
 
-**Détails des calculs :**
+**CALCULS :**
 
-Chemin de vie :
+Chemin de vie (${donnees.cheminDeVie}) :
 - Date : ${donnees.detailsCheminDeVie.jour}/${donnees.detailsCheminDeVie.mois}/${donnees.detailsCheminDeVie.annee}
-- Jour réduit : ${donnees.detailsCheminDeVie.jour} → ${donnees.detailsCheminDeVie.sommeJour}
-- Mois réduit : ${donnees.detailsCheminDeVie.mois} → ${donnees.detailsCheminDeVie.sommeMois}
-- Année réduite : ${donnees.detailsCheminDeVie.annee} → ${donnees.detailsCheminDeVie.sommeAnnee} → ${reduireNombre(donnees.detailsCheminDeVie.sommeAnnee)}
-- Chemin de vie : ${donnees.detailsCheminDeVie.sommeJour} + ${sommeAnneeReduite} + ${donnees.detailsCheminDeVie.sommeMois} = ${sommeIntermediaire} → ${donnees.cheminDeVie}
+- Jour ${donnees.detailsCheminDeVie.jour} → ${donnees.detailsCheminDeVie.sommeJour}
+- Mois ${donnees.detailsCheminDeVie.mois} → ${donnees.detailsCheminDeVie.sommeMois}
+- Année ${donnees.detailsCheminDeVie.annee} → ${donnees.detailsCheminDeVie.sommeAnnee} → ${reduireNombre(donnees.detailsCheminDeVie.sommeAnnee)}
+- Total : ${donnees.detailsCheminDeVie.sommeJour} + ${sommeAnneeReduite} + ${donnees.detailsCheminDeVie.sommeMois} = ${sommeIntermediaire} → ${donnees.cheminDeVie}
 
-Nombre d'expression (${donnees.prenom} ${donnees.nom}) :
-- Calcul : ${lettresExpression}
-- Total : ${donnees.detailsExpression.somme}
-- Réduction : ${donnees.detailsExpression.somme} → ${donnees.nombreExpression}
+Expression (${donnees.nombreExpression}) :
+- ${donnees.prenom} ${donnees.nom} : ${lettresExpression}
+- Total : ${donnees.detailsExpression.somme} → ${donnees.nombreExpression}
 
-Nombre intime (${donnees.prenom}) :
-- Calcul : ${lettresIntime}
-- Total : ${donnees.detailsIntime.somme}
-- Réduction : ${donnees.detailsIntime.somme} → ${donnees.nombreIntime}
+Intime (${donnees.nombreIntime}) :
+- ${donnees.prenom} : ${lettresIntime}
+- Total : ${donnees.detailsIntime.somme} → ${donnees.nombreIntime}
 
-Structure attendue (réponds en JSON strict) :
+**STRUCTURE DE RÉPONSE (JSON strict) :**
 
 {
-  "introduction": "Paragraphe synthétique présentant la numérologie, son objectif, et ce que permet de comprendre une étude basée sur l'identité et la date de naissance.",
+  "introduction": "Un paragraphe court et percutant qui parle directement à ${donnees.prenom}. Présente la numérologie de manière simple et explique ce que cette analyse va révéler sur sa personnalité. Utilise 'tu' et mentionne son prénom.",
   "cheminDeVie": {
-    "explicationCalcul": "Explication précise du calcul étape par étape avec les détails intermédiaires",
+    "explicationCalcul": "Explique le calcul de manière simple et claire, étape par étape, en parlant directement à ${donnees.prenom}.",
     "signification": {
-      "tendancesPersonnalite": "Grandes tendances de personnalité",
-      "forcesNaturelles": "Forces naturelles",
-      "defisRecurrents": "Défis récurrents",
-      "environnementFavorable": "Type d'environnement favorable"
+      "tendancesPersonnalite": "Décris la personnalité de ${donnees.prenom} de manière précise et concrète. Sois spécifique sur ses traits de caractère, sa façon d'être, ses comportements typiques. Utilise des exemples concrets.",
+      "forcesNaturelles": "Ses forces et talents naturels, ce qu'il/elle fait naturellement bien. Sois concret et précis.",
+      "defisRecurrents": "Les défis ou difficultés qu'il/elle rencontre régulièrement. Sois bienveillant mais direct.",
+      "environnementFavorable": "Le type d'environnement (professionnel, personnel) où ${donnees.prenom} s'épanouit le mieux."
     }
   },
   "nombreExpression": {
-    "explicationCalcul": "Explication du principe de conversion des lettres en valeurs numériques, le total obtenu et sa réduction",
+    "explicationCalcul": "Explique simplement comment on calcule le nombre d'expression à partir de son nom complet.",
     "interpretation": {
-      "maniereAgir": "Manier d'agir",
-      "talentsDominants": "Talents dominants",
-      "postureRelationnelle": "Posture relationnelle et professionnelle"
+      "maniereAgir": "Comment ${donnees.prenom} agit dans la vie, sa façon d'aborder les situations, son style. Sois précis et concret.",
+      "talentsDominants": "Ses talents et capacités dominants, ce qu'il/elle excelle à faire. Donne des exemples concrets.",
+      "postureRelationnelle": "Comment ${donnees.prenom} se comporte en relation avec les autres (personnel et professionnel). Sois spécifique."
     }
   },
   "nombreIntime": {
-    "explicationCalcul": "Explication du calcul",
+    "explicationCalcul": "Explique simplement le calcul du nombre intime à partir du prénom.",
     "interpretation": {
-      "motivationsProfondes": "Motivations profondes, besoins internes, moteurs inconscients"
+      "motivationsProfondes": "Ce qui motive vraiment ${donnees.prenom} au plus profond de lui/elle, ses besoins essentiels, ce qui le/la fait vibrer. Sois précis et personnel."
     }
   },
   "coherenceGlobale": {
-    "analyse": "Analyse de la cohérence ou des tensions entre le chemin de vie, le nombre d'expression et le nombre intime",
-    "axesDeveloppement": "Grands axes de développement personnel",
-    "leviersEvolution": "Leviers d'évolution et de prise de décision"
+    "analyse": "Analyse comment ces trois nombres (chemin de vie, expression, intime) s'harmonisent ou créent des tensions dans la personnalité de ${donnees.prenom}. Sois concret et utilise son prénom.",
+    "axesDeveloppement": "Les domaines où ${donnees.prenom} devrait se développer pour s'épanouir pleinement. Sois concret et actionnable.",
+    "leviersEvolution": "Les leviers concrets que ${donnees.prenom} peut activer pour évoluer et prendre de meilleures décisions."
   },
   "conclusion": {
-    "synthese": "Synthèse claire du profil numérologique",
-    "conseilsOrientations": "Conseils concrets d'orientation (personnelle, professionnelle ou stratégique)",
-    "perspectiveAvenir": "Conclusion tournée vers l'avenir, sans prédiction rigide"
+    "synthese": "Une synthèse percutante du profil de ${donnees.prenom} qui résume l'essentiel. Utilise 'tu' et son prénom.",
+    "conseilsOrientations": "Des conseils concrets et actionnables pour ${donnees.prenom} (personnel, professionnel, stratégique). Sois précis.",
+    "perspectiveAvenir": "Une conclusion tournée vers l'avenir, positive et motivante pour ${donnees.prenom}, sans prédiction rigide."
   }
 }
 
-Important :
-- Le contenu doit être original, structuré, sans phrases vagues
-- Chaque partie doit apporter une vraie valeur d'analyse
-- Aucune question ne doit être posée à l'utilisateur dans la réponse finale
-- Réponds UNIQUEMENT avec le JSON, sans texte supplémentaire avant ou après.`;
+**RÈGLES STRICTES :**
+- Parle TOUJOURS à ${donnees.prenom} avec "tu" et "ton/ta/tes"
+- Utilise son prénom ${donnees.prenom} plusieurs fois dans chaque section
+- Sois CONCIS et PERCUTANT - chaque phrase doit avoir de l'impact
+- Détaille sa PERSONNALITÉ de manière précise et concrète
+- Évite les phrases vagues ou génériques
+- Réponds UNIQUEMENT avec le JSON, sans texte avant ou après.`;
 }
 
 /**
@@ -165,7 +165,7 @@ export async function genererAnalyseOpenAI(
       messages: [
         {
           role: 'system',
-          content: 'Tu es un expert en numérologie. Fournis des analyses détaillées, personnalisées et positives en français. Réponds toujours en format JSON valide.',
+          content: 'Tu es un expert en numérologie moderne. Tu crées des analyses personnalisées, percutantes et directes. Tu parles toujours à la personne avec "tu" et utilises son prénom régulièrement. Tu détailles la personnalité de manière précise et concrète. Réponds toujours en format JSON valide.',
         },
         {
           role: 'user',

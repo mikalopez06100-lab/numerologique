@@ -13,11 +13,11 @@ export default function Home() {
   const [email, setEmail] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingAnalyse, setIsLoadingAnalyse] = useState(false);
+  const [hasAnalyse, setHasAnalyse] = useState<boolean | null>(null);
   const router = useRouter();
 
-  // Vérifier si l'utilisateur est déjà authentifié
+  // Vérifier si l'utilisateur est déjà authentifié et s'il a une analyse
   useEffect(() => {
-    // Vérifier le cookie d'authentification
     const checkAuth = async () => {
       try {
         const response = await fetch('/api/auth/check');
@@ -25,9 +25,22 @@ export default function Home() {
         if (data.authenticated && data.email) {
           setEmail(data.email);
           setStep('form');
+          
+          // Vérifier si l'utilisateur a déjà une analyse
+          try {
+            const analyseResponse = await fetch('/api/analyse/has-analyse');
+            const analyseData = await analyseResponse.json();
+            if (analyseData.success) {
+              setHasAnalyse(analyseData.hasAnalyse);
+            }
+          } catch (error) {
+            console.error('Erreur lors de la vérification de l\'analyse:', error);
+            setHasAnalyse(false);
+          }
         }
       } catch (error) {
         // Pas authentifié, rester sur l'étape email
+        setHasAnalyse(false);
       }
     };
     checkAuth();
@@ -62,6 +75,18 @@ export default function Home() {
         // Enregistrer l'email et passer directement au formulaire
         setEmail(userEmail);
         setStep('form');
+        
+        // Vérifier si l'utilisateur a déjà une analyse
+        try {
+          const analyseResponse = await fetch('/api/analyse/has-analyse');
+          const analyseData = await analyseResponse.json();
+          if (analyseData.success) {
+            setHasAnalyse(analyseData.hasAnalyse);
+          }
+        } catch (error) {
+          console.error('Erreur lors de la vérification de l\'analyse:', error);
+          setHasAnalyse(false);
+        }
       } else {
         const errorMessage = result.error || 'Erreur lors de l\'enregistrement de l\'email';
         const details = result.details ? `\n\nDétails: ${result.details}` : '';
@@ -115,11 +140,18 @@ export default function Home() {
       if (result.success && result.data) {
         // Stocker l'analyse dans le localStorage pour la page de résultats
         localStorage.setItem('derniereAnalyse', JSON.stringify(result.data));
+        // Mettre à jour l'état pour afficher le bouton
+        setHasAnalyse(true);
         // Rediriger vers la page de résultats
         router.push('/resultats');
       } else {
         console.error('Erreur API:', result);
         let errorMessage = result.error || 'Une erreur est survenue lors de l\'analyse';
+        
+        // Si l'utilisateur a déjà une analyse, mettre à jour l'état
+        if (response.status === 403 && errorMessage.includes('déjà effectué')) {
+          setHasAnalyse(true);
+        }
         
         if (response.status === 429 && result.rateLimit) {
           errorMessage += `\n\nLimites d'utilisation:\n`;
@@ -171,18 +203,38 @@ export default function Home() {
                   <div className="text-sm text-gray-400">
                     Email enregistré : <span className="text-purple-400">{email}</span>
                   </div>
-                  <button
-                    onClick={handleAccessAnalyse}
-                    disabled={isLoadingAnalyse}
-                    className="px-4 py-2 text-sm text-purple-400 hover:text-purple-300 transition-colors bg-black/40 backdrop-blur-md rounded-lg border border-purple-500/30 hover:border-purple-400/50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isLoadingAnalyse ? 'Chargement...' : 'Voir mon analyse'}
-                  </button>
+                  {hasAnalyse && (
+                    <button
+                      onClick={handleAccessAnalyse}
+                      disabled={isLoadingAnalyse}
+                      className="px-4 py-2 text-sm text-purple-400 hover:text-purple-300 transition-colors bg-black/40 backdrop-blur-md rounded-lg border border-purple-500/30 hover:border-purple-400/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isLoadingAnalyse ? 'Chargement...' : 'Voir mon analyse'}
+                    </button>
+                  )}
                 </div>
-                <FormulaireNumerologie
-                  onSubmit={handleFormSubmit}
-                  isLoading={isLoading}
-                />
+                {hasAnalyse ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-300 mb-4">
+                      Vous avez déjà réalisé une analyse numérologique.
+                    </p>
+                    <p className="text-sm text-gray-400 mb-6">
+                      Cliquez sur "Voir mon analyse" ci-dessus pour consulter votre profil.
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Chaque email ne peut effectuer qu'une seule analyse.
+                    </p>
+                  </div>
+                ) : hasAnalyse === false ? (
+                  <FormulaireNumerologie
+                    onSubmit={handleFormSubmit}
+                    isLoading={isLoading}
+                  />
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="text-gray-400">Vérification...</div>
+                  </div>
+                )}
               </>
             )}
           </div>

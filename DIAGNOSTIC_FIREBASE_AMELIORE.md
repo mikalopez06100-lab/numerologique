@@ -75,7 +75,33 @@ Si vous voyez une erreur, elle sera précédée de ❌ avec le message détaill�
 - Vérifiez le format de `FIREBASE_PRIVATE_KEY` (voir ci-dessous)
 - Vérifiez que les valeurs correspondent au fichier JSON téléchargé depuis Firebase Console
 
-### 3. Format de FIREBASE_PRIVATE_KEY
+### 3. "7 PERMISSION_DENIED : L'API Cloud Firestore n'a pas été utilisée"
+
+**Erreur typique :**
+```
+7 PERMISSION_DENIED : L'API Cloud Firestore n'a pas été utilisée dans le projet [PROJECT_ID] ou elle est désactivée.
+```
+
+**Cause :**
+- L'API Cloud Firestore n'est pas activée dans votre projet Firebase/Google Cloud
+
+**Solution :**
+1. **Cliquez sur le lien** fourni dans l'erreur (ex: `https://console.developers.google.com/apis/api/firestore.googleapis.com/overview?project=numerologique-ed43e`)
+2. **Cliquez sur "ACTIVER"** ou **"ENABLE"**
+3. **Attendez 1-2 minutes** que l'activation se propage
+4. **Testez à nouveau** `/api/test-firebase`
+
+**Alternative : Via Firebase Console**
+1. Allez sur [Firebase Console](https://console.firebase.google.com/)
+2. Sélectionnez votre projet
+3. Cliquez sur **"Firestore Database"** dans le menu de gauche
+4. Cliquez sur **"Créer une base de données"** ou **"Create database"**
+5. Choisissez le mode (Production recommandé) et une région
+6. Cliquez sur **"Créer"**
+
+📖 **Guide détaillé :** Voir `ACTIVER_FIRESTORE.md`
+
+### 4. Format de FIREBASE_PRIVATE_KEY
 
 **Format CORRECT :**
 ```

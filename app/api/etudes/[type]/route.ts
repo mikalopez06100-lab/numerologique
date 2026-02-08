@@ -29,10 +29,11 @@ type StudyType =
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { type: string } }
+  { params }: { params: Promise<{ type: string }> }
 ) {
   try {
-    const studyType = params.type as StudyType;
+    const resolvedParams = await params;
+    const studyType = resolvedParams.type as StudyType;
 
     // Vérifier l'authentification
     const email = request.cookies.get('auth_email')?.value;

@@ -33,11 +33,27 @@ export interface Analyse {
 
 // Fonction pour obtenir les collections (lazy)
 function getUsersCollection() {
-  return db.collection('users');
+  try {
+    console.log('🔍 Accès à la collection users...');
+    const collection = db.collection('users');
+    console.log('✅ Collection users obtenue');
+    return collection;
+  } catch (error) {
+    console.error('❌ Erreur lors de l\'accès à la collection users:', error);
+    throw error;
+  }
 }
 
 function getAnalysesCollection() {
-  return db.collection('analyses');
+  try {
+    console.log('🔍 Accès à la collection analyses...');
+    const collection = db.collection('analyses');
+    console.log('✅ Collection analyses obtenue');
+    return collection;
+  } catch (error) {
+    console.error('❌ Erreur lors de l\'accès à la collection analyses:', error);
+    throw error;
+  }
 }
 
 /**

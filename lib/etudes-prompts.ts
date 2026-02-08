@@ -472,6 +472,11 @@ export function genererPromptCompatibiliteFamiliale(donnees: CompatibiliteData):
 
   const relationInfo = donnees.relation ? `\n**Relation :** ${donnees.relation}` : '';
 
+  // Construire les parties dynamiques du JSON template
+  const introductionSuffix = donnees.relation ? ` dans le contexte d'une relation ${donnees.relation}` : '';
+  const cheminDeVieNote = donnees.compatibilite.cheminDeVie === null ? ' (note: calcul non disponible, données manquantes)' : '';
+  const scoreGlobal = donnees.compatibilite.scoreGlobal;
+
   return `Tu es un expert en numérologie moderne, spécialisé dans l'analyse de compatibilité familiale.
 
 **Personne 1 :**
@@ -495,36 +500,36 @@ Contraintes générales :
 
 Structure attendue (réponds en JSON strict) :
 
-{
-  "introduction": "Paragraphe présentant l'analyse de compatibilité familiale${donnees.relation ? ' dans le contexte d\\'une relation ' + donnees.relation : ''}",
-  "analyseGlobale": {
-    "score": ${donnees.compatibilite.scoreGlobal},
-    "evaluation": "Évaluation générale de la compatibilité familiale",
-    "pointsForts": "Points forts de cette relation familiale",
-    "pointsAttention": "Points nécessitant de l'attention pour améliorer la relation"
+${JSON.stringify({
+  introduction: `Paragraphe présentant l'analyse de compatibilité familiale${introductionSuffix}`,
+  analyseGlobale: {
+    score: scoreGlobal,
+    evaluation: "Évaluation générale de la compatibilité familiale",
+    pointsForts: "Points forts de cette relation familiale",
+    pointsAttention: "Points nécessitant de l'attention pour améliorer la relation"
   },
-  "compatibiliteCheminDeVie": {
-    "analyse": "Analyse de la compatibilité des chemins de vie dans un contexte familial${donnees.compatibilite.cheminDeVie === null ? ' (note: calcul non disponible, données manquantes)' : ''}",
-    "dynamique": "Dynamique familiale créée par ces chemins de vie"
+  compatibiliteCheminDeVie: {
+    analyse: `Analyse de la compatibilité des chemins de vie dans un contexte familial${cheminDeVieNote}`,
+    dynamique: "Dynamique familiale créée par ces chemins de vie"
   },
-  "compatibiliteExpression": {
-    "analyse": "Analyse de la compatibilité des expressions (manière d'agir) dans la famille",
-    "communication": "Style de communication et d'interaction"
+  compatibiliteExpression: {
+    analyse: "Analyse de la compatibilité des expressions (manière d'agir) dans la famille",
+    communication: "Style de communication et d'interaction"
   },
-  "compatibiliteIntime": {
-    "analyse": "Analyse de la compatibilité des nombres intimes (motivations profondes) en contexte familial",
-    "harmonie": "Niveau d'harmonie des besoins profonds dans la relation familiale"
+  compatibiliteIntime: {
+    analyse: "Analyse de la compatibilité des nombres intimes (motivations profondes) en contexte familial",
+    harmonie: "Niveau d'harmonie des besoins profonds dans la relation familiale"
   },
-  "conseils": {
-    "communication": "Conseils pour améliorer la communication familiale",
-    "comprehension": "Comment mieux se comprendre mutuellement",
-    "momentsFavorables": "Types de moments favorables pour cette relation familiale"
+  conseils: {
+    communication: "Conseils pour améliorer la communication familiale",
+    comprehension: "Comment mieux se comprendre mutuellement",
+    momentsFavorables: "Types de moments favorables pour cette relation familiale"
   },
-  "conclusion": {
-    "synthese": "Synthèse de la compatibilité familiale",
-    "perspective": "Perspective d'évolution de cette relation familiale"
+  conclusion: {
+    synthese: "Synthèse de la compatibilité familiale",
+    perspective: "Perspective d'évolution de cette relation familiale"
   }
-}
+}, null, 2)}
 
 Important :
 - Le contenu doit être original, structuré, sans phrases vagues

@@ -101,7 +101,29 @@ Si vous voyez une erreur, elle sera précédée de ❌ avec le message détaill�
 
 📖 **Guide détaillé :** Voir `ACTIVER_FIRESTORE.md`
 
-### 4. Format de FIREBASE_PRIVATE_KEY
+### 4. "5 NOT_FOUND : Base de données Firestore introuvable"
+
+**Erreur typique :**
+```
+5 NOT_FOUND : 
+```
+
+**Cause :**
+- L'API Firestore est activée, mais la **base de données Firestore elle-même n'a pas été créée**
+
+**Solution :**
+1. Allez sur [Firebase Console](https://console.firebase.google.com/)
+2. Sélectionnez votre projet
+3. Cliquez sur **"Firestore Database"** dans le menu de gauche
+4. Cliquez sur **"Créer une base de données"** ou **"Create database"**
+5. Choisissez le mode (Production recommandé) et une région
+6. Cliquez sur **"Créer"**
+7. Attendez 1-2 minutes
+8. Testez à nouveau `/api/test-firebase`
+
+📖 **Guide détaillé :** Voir `CREER_DATABASE_FIRESTORE.md`
+
+### 5. Format de FIREBASE_PRIVATE_KEY
 
 **Format CORRECT :**
 ```
@@ -128,7 +150,8 @@ Si vous voyez une erreur, elle sera précédée de ❌ avec le message détaill�
 - [ ] `FIREBASE_PROJECT_ID` est configuré
 - [ ] `FIREBASE_CLIENT_EMAIL` est configuré
 - [ ] `FIREBASE_PRIVATE_KEY` est au bon format (une ligne avec `\n`)
-- [ ] Firestore est activé dans Firebase Console
+- [ ] **API Firestore est activée** dans Google Cloud Console
+- [ ] **Base de données Firestore est créée** dans Firebase Console
 - [ ] Le projet a été redéployé après ajout des variables
 - [ ] Les logs Vercel montrent les messages 🔍 et ✅
 

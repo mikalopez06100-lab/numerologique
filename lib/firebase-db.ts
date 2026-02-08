@@ -31,9 +31,14 @@ export interface Analyse {
   updatedAt: Date;
 }
 
-// Collections
-const usersCollection = db.collection('users');
-const analysesCollection = db.collection('analyses');
+// Fonction pour obtenir les collections (lazy)
+function getUsersCollection() {
+  return db.collection('users');
+}
+
+function getAnalysesCollection() {
+  return db.collection('analyses');
+}
 
 /**
  * Convertit un Timestamp Firestore en Date
@@ -61,7 +66,7 @@ function dateToTimestamp(date: Date | string): Timestamp {
  */
 export async function getOrCreateUser(email: string): Promise<User> {
   // Chercher l'utilisateur par email
-  const userQuery = await usersCollection.where('email', '==', email).limit(1).get();
+  const userQuery = await getUsersCollection().where('email', '==', email).limit(1).get();
   
   if (!userQuery.empty) {
     const doc = userQuery.docs[0];
@@ -76,7 +81,7 @@ export async function getOrCreateUser(email: string): Promise<User> {
 
   // Créer un nouvel utilisateur
   const now = new Date();
-  const userRef = await usersCollection.add({
+  const userRef = await getUsersCollection().add({
     email,
     createdAt: dateToTimestamp(now),
     updatedAt: dateToTimestamp(now),
@@ -94,7 +99,7 @@ export async function getOrCreateUser(email: string): Promise<User> {
  * Récupère un utilisateur par email
  */
 export async function getUserByEmail(email: string): Promise<User | null> {
-  const userQuery = await usersCollection.where('email', '==', email).limit(1).get();
+  const userQuery = await getUsersCollection().where('email', '==', email).limit(1).get();
   
   if (userQuery.empty) {
     return null;
@@ -117,7 +122,7 @@ export async function hasUserAlreadyAnalyzed(email: string): Promise<boolean> {
   const user = await getUserByEmail(email);
   if (!user) return false;
 
-  const analysesQuery = await analysesCollection
+  const analysesQuery = await getAnalysesCollection()
     .where('userId', '==', user.id)
     .limit(1)
     .get();
@@ -129,7 +134,7 @@ export async function hasUserAlreadyAnalyzed(email: string): Promise<boolean> {
  * Récupère le nombre total d'utilisateurs
  */
 export async function getUsersCount(): Promise<number> {
-  const totalSnapshot = await usersCollection.count().get();
+  const totalSnapshot = await getUsersCollection().count().get();
   return totalSnapshot.data().count;
 }
 
@@ -150,7 +155,7 @@ export async function getUsers(options: {
 
   // Récupérer tous les utilisateurs (Firestore ne supporte pas offset nativement)
   // Pour de grandes collections, il faudrait implémenter une pagination avec startAfter
-  const allUsersSnapshot = await usersCollection
+  const allUsersSnapshot = await getUsersCollection()
     .orderBy('createdAt', 'desc')
     .get();
 
@@ -188,7 +193,7 @@ export async function createAnalyse(data: {
   analyseData: string;
 }): Promise<Analyse> {
   const now = new Date();
-  const analyseRef = await analysesCollection.add({
+  const analyseRef = await getAnalysesCollection().add({
     ...data,
     pdfGenerated: false,
     emailSent: false,
@@ -213,7 +218,7 @@ export async function updateAnalyse(
   id: string,
   data: Partial<Pick<Analyse, 'pdfGenerated' | 'emailSent' | 'analyseData'>>
 ): Promise<void> {
-  await analysesCollection.doc(id).update({
+  await getAnalysesCollection().doc(id).update({
     ...data,
     updatedAt: dateToTimestamp(new Date()),
   });
@@ -223,7 +228,7 @@ export async function updateAnalyse(
  * Récupère une analyse par ID
  */
 export async function getAnalyseById(id: string): Promise<Analyse | null> {
-  const doc = await analysesCollection.doc(id).get();
+  const doc = await getAnalysesCollection().doc(id).get();
   
   if (!doc.exists) {
     return null;
@@ -251,7 +256,7 @@ export async function getAnalyseById(id: string): Promise<Analyse | null> {
  * Récupère toutes les analyses d'un utilisateur
  */
 export async function getAnalysesByUserId(userId: string): Promise<Analyse[]> {
-  const snapshot = await analysesCollection
+  const snapshot = await getAnalysesCollection()
     .where('userId', '==', userId)
     .orderBy('createdAt', 'desc')
     .get();
@@ -292,10 +297,10 @@ export async function getStats(): Promise<{
   }>;
 }> {
   const [usersCount, analysesCount, pdfCount, emailCount] = await Promise.all([
-    usersCollection.count().get(),
-    analysesCollection.count().get(),
-    analysesCollection.where('pdfGenerated', '==', true).count().get(),
-    analysesCollection.where('emailSent', '==', true).count().get(),
+    getUsersCollection().count().get(),
+    getAnalysesCollection().count().get(),
+    getAnalysesCollection().where('pdfGenerated', '==', true).count().get(),
+    getAnalysesCollection().where('emailSent', '==', true).count().get(),
   ]);
 
   const totalUsers = usersCount.data().count;
@@ -304,7 +309,7 @@ export async function getStats(): Promise<{
   const analysesWithEmail = emailCount.data().count;
 
   // Récupérer les top utilisateurs
-  const topUsersSnapshot = await usersCollection
+  const topUsersSnapshot = await getUsersCollection()
     .orderBy('createdAt', 'desc')
     .limit(10)
     .get();
@@ -339,7 +344,7 @@ export async function getAllUsersForExport(filter?: 'all' | 'with_analysis' | 'w
   createdAt: Date;
   analysesCount: number;
 }>> {
-  const usersSnapshot = await usersCollection
+  const usersSnapshot = await getUsersCollection()
     .orderBy('createdAt', 'desc')
     .get();
 

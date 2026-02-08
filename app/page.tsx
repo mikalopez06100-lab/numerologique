@@ -44,6 +44,17 @@ export default function Home() {
         body: JSON.stringify({ email: userEmail }),
       });
 
+      if (!response.ok) {
+        // Si la réponse n'est pas OK, essayer de parser le JSON pour obtenir le message d'erreur
+        try {
+          const errorData = await response.json();
+          alert(errorData.error || `Erreur ${response.status}: ${response.statusText}`);
+        } catch {
+          alert(`Erreur ${response.status}: ${response.statusText}`);
+        }
+        return;
+      }
+
       const result = await response.json();
 
       if (result.success) {
@@ -51,11 +62,14 @@ export default function Home() {
         setEmail(userEmail);
         setStep('form');
       } else {
-        alert(result.error || 'Erreur lors de l\'enregistrement de l\'email');
+        const errorMessage = result.error || 'Erreur lors de l\'enregistrement de l\'email';
+        const details = result.details ? `\n\nDétails: ${result.details}` : '';
+        alert(errorMessage + details);
       }
     } catch (error) {
       console.error('Erreur:', error);
-      alert('Une erreur est survenue. Veuillez réessayer.');
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+      alert(`Une erreur est survenue: ${errorMessage}\n\nVeuillez vérifier votre connexion et réessayer.`);
     } finally {
       setIsLoading(false);
     }

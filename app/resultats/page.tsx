@@ -41,6 +41,24 @@ export default function ResultatsPage() {
 
   const analyseData = analyse.analyse;
   const hasNewStructure = analyseData.introduction || analyseData.cheminDeVieDetail;
+  
+  // Fonction helper pour extraire un nombre d'un texte
+  const extractNumberFromText = (text: string): number | null => {
+    // Chercher des patterns comme "chemin de vie 11" ou "nombre 5"
+    const match = text.match(/\b(\d{1,2})\b/);
+    return match ? parseInt(match[1], 10) : null;
+  };
+  
+  // Extraire les nombres depuis les détails si les valeurs directes ne sont pas présentes
+  const cheminDeVie = analyseData.cheminDeVie ?? 
+    (analyseData.cheminDeVieDetail?.explicationCalcul ? 
+      extractNumberFromText(analyseData.cheminDeVieDetail.explicationCalcul) : null);
+  const nombreExpression = analyseData.nombreExpression ?? 
+    (analyseData.nombreExpressionDetail?.explicationCalcul ? 
+      extractNumberFromText(analyseData.nombreExpressionDetail.explicationCalcul) : null);
+  const nombreIntime = analyseData.nombreIntime ?? 
+    (analyseData.nombreIntimeDetail?.explicationCalcul ? 
+      extractNumberFromText(analyseData.nombreIntimeDetail.explicationCalcul) : null);
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -66,19 +84,19 @@ export default function ResultatsPage() {
               <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-2xl shadow-purple-500/20 text-center">
                 <h3 className="text-gray-400 text-sm mb-2">Chemin de Vie</h3>
                 <div className="text-5xl font-bold text-purple-400">
-                  {typeof analyseData.cheminDeVie === 'number' ? analyseData.cheminDeVie : '—'}
+                  {cheminDeVie ?? '—'}
                 </div>
               </div>
               <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-2xl shadow-purple-500/20 text-center">
                 <h3 className="text-gray-400 text-sm mb-2">Expression</h3>
                 <div className="text-5xl font-bold text-purple-400">
-                  {typeof analyseData.nombreExpression === 'number' ? analyseData.nombreExpression : '—'}
+                  {nombreExpression ?? '—'}
                 </div>
               </div>
               <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-2xl shadow-purple-500/20 text-center">
                 <h3 className="text-gray-400 text-sm mb-2">Intime</h3>
                 <div className="text-5xl font-bold text-purple-400">
-                  {typeof analyseData.nombreIntime === 'number' ? analyseData.nombreIntime : '—'}
+                  {nombreIntime ?? '—'}
                 </div>
               </div>
             </div>

@@ -150,9 +150,6 @@ export async function POST(request: NextRequest) {
 
     // Réorganiser la structure pour éviter les conflits de noms
     const analyse = {
-      cheminDeVie,
-      nombreExpression,
-      nombreIntime,
       ...analyseParsed,
       // Renommer les objets détaillés si présents
       ...(analyseParsed.cheminDeVie && typeof analyseParsed.cheminDeVie === 'object' && {
@@ -166,7 +163,7 @@ export async function POST(request: NextRequest) {
       }),
     };
 
-    // Nettoyer les doublons
+    // Nettoyer les doublons et s'assurer que les valeurs numériques sont toujours présentes
     if (typeof analyse.cheminDeVie === 'object') {
       delete analyse.cheminDeVie;
     }
@@ -176,6 +173,11 @@ export async function POST(request: NextRequest) {
     if (typeof analyse.nombreIntime === 'object') {
       delete analyse.nombreIntime;
     }
+    
+    // Réinsérer les valeurs numériques calculées (toujours présentes en haut de la page)
+    analyse.cheminDeVie = cheminDeVie;
+    analyse.nombreExpression = nombreExpression;
+    analyse.nombreIntime = nombreIntime;
 
     // Créer ou récupérer l'utilisateur
     const user = await getOrCreateUser(email);

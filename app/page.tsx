@@ -232,15 +232,13 @@ export default function Home() {
                   <div className="text-sm text-gray-400">
                     Email enregistré : <span className="text-purple-400">{email}</span>
                   </div>
-                  {hasAnalyse && (
-                    <button
-                      onClick={handleAccessAnalyse}
-                      disabled={isLoadingAnalyse}
-                      className="px-4 py-2 text-sm text-purple-400 hover:text-purple-300 transition-colors bg-black/40 backdrop-blur-md rounded-lg border border-purple-500/30 hover:border-purple-400/50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isLoadingAnalyse ? 'Chargement...' : 'Voir mon analyse'}
-                    </button>
-                  )}
+                  <button
+                    onClick={handleAccessAnalyse}
+                    disabled={isLoadingAnalyse || isCheckingAnalyse}
+                    className="px-4 py-2 text-sm text-purple-400 hover:text-purple-300 transition-colors bg-black/40 backdrop-blur-md rounded-lg border border-purple-500/30 hover:border-purple-400/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoadingAnalyse ? 'Chargement...' : 'Voir mon analyse'}
+                  </button>
                 </div>
                 {isCheckingAnalyse ? (
                   <div className="text-center py-8">

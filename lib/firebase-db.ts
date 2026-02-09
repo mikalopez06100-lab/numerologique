@@ -270,14 +270,14 @@ export async function getAnalyseById(id: string): Promise<Analyse | null> {
 
 /**
  * Récupère toutes les analyses d'un utilisateur
+ * Note: On récupère sans orderBy pour éviter l'index composite, puis on trie en mémoire
  */
 export async function getAnalysesByUserId(userId: string): Promise<Analyse[]> {
   const snapshot = await getAnalysesCollection()
     .where('userId', '==', userId)
-    .orderBy('createdAt', 'desc')
     .get();
 
-  return snapshot.docs.map((doc) => {
+  const analyses = snapshot.docs.map((doc) => {
     const data = doc.data();
     return {
       id: doc.id,
@@ -295,6 +295,11 @@ export async function getAnalysesByUserId(userId: string): Promise<Analyse[]> {
       updatedAt: timestampToDate(data.updatedAt),
     };
   });
+
+  // Trier par date de création (plus récente en premier) en mémoire
+  analyses.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+  return analyses;
 }
 
 /**

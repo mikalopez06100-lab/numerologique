@@ -38,6 +38,19 @@ export function reduireNombreFinal(nombre: number): number {
 }
 
 /**
+ * Normalise une chaîne en remplaçant les lettres accentuées et ligatures par leur équivalent.
+ * En numérologie : É = E, À = A, Ç = C, œ = OE, æ = AE, etc.
+ */
+function normaliserLettres(texte: string): string {
+  return texte
+    .replace(/œ/gi, 'oe')
+    .replace(/æ/gi, 'ae')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Za-z]/g, '');
+}
+
+/**
  * Convertit une lettre en valeur numérologique (A=1, B=2, etc.)
  */
 export function lettreVersNombre(lettre: string): number {
@@ -49,9 +62,11 @@ export function lettreVersNombre(lettre: string): number {
 /**
  * Calcule la valeur numérologique d'un nom complet
  * Réduit toujours à un chiffre unique (1-9)
+ * Les lettres accentuées (é, è, à, ç, etc.) sont correctement prises en compte.
  */
 export function calculerValeurNom(nomComplet: string): number {
-  const lettres = nomComplet.replace(/[^A-Za-z]/g, '').split('');
+  const lettresNorm = normaliserLettres(nomComplet);
+  const lettres = lettresNorm.split('');
   const somme = lettres.reduce((sum, lettre) => {
     return sum + lettreVersNombre(lettre);
   }, 0);
@@ -67,7 +82,8 @@ export function calculerDetailsNom(nomComplet: string): {
   somme: number;
   nombreFinal: number;
 } {
-  const lettres = nomComplet.replace(/[^A-Za-z]/g, '').split('');
+  const lettresNorm = normaliserLettres(nomComplet);
+  const lettres = lettresNorm.split('');
   const detailsLettres = lettres.map((lettre) => ({
     lettre: lettre.toUpperCase(),
     valeur: lettreVersNombre(lettre),
